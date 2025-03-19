@@ -2,38 +2,109 @@
 # SPDX-License-Identifier: Apache-2.0
 # SPDX-FileCopyrightText: 2025 The Linux Foundation
 
-# actions-template
-name: "🛠️ Actions Template"
-description: "Description of action"
-# Any relevant notes/observations can go here
+# python-project-tag-push-verify-action
+name: "🐍 Check Pushed Tag Matches Project Version"
+description: "Checks a pushed tag matches the declared Python project version"
 
 inputs:
-  INPUT:
-    description: "Description of input"
+  EXIT_ON_FAIL:
+    description: "When set true will exit with error on version mismatch"
     required: false
+    default: "true"
+  PATH_PREFIX:
+    description: "Directory location containing project code"
     type: string
-    default: "input"
+    required: false
+    default: ""
+  # For testing purposes ONLY, do not use
+  TEST_TAG:
+    description: "Undocumented test input/value"
+    type: string
+    required: false
 
 outputs:
-  OUTPUT:
-    description: "Description of output"
-    value: ${{ steps.code.outputs.output }}
+  MATCH:
+    description: "Set true when pushed tags match Python project metadata"
+    value: ${{ steps.verify.outputs.match }}
 
 runs:
   using: "composite"
   steps:
-    - name: "Friendly Name"
-      id: code
+    - name: "Error: workflow/action trigger NOT tag event"
+      if: startsWith(github.ref, 'refs/tags/') != 'true'
       shell: bash
       run: |
-        # Friendly Name
-        INPUT="${{ inputs.input }}"
-        if [ -z "$INPUT" ]; then
-          echo "Error: mandatory input INPUT was not set/configured ❌"
+        # Error when workflow/action trigger not tag event
+        EXIT_ON_FAIL=$(echo "${{ inputs.exit_on_fail }}" |\
+          tr '[:upper:]' '[:lower:]')
+        if [ "f$EXIT_ON_FAIL" = "ftrue" ]; then
+          echo "Workflow/action trigger was NOT tag push event ❌"
+          exit 1
+        else
+          echo "Workflow/action was NOT triggered by tag push event ⚠️"
+        fi
+
+    - name: "Retrieve Python project version"
+      id: fetch
+      # yamllint disable-line rule:line-length
+      uses: lfreleng-actions/python-project-version-action@7e49f13405f9d85a9df56da360e34c23385b813f # v0.1.0
+      with:
+        path_prefix: "${{ inputs.PATH_PREFIX }}"
+
+    - name: "Check tag/version for match"
+      id: verify
+      shell: bash
+      run: |
+        # Check tag/versions for consistency
+        EXIT_ON_FAIL=$(echo "${{ inputs.exit_on_fail }}" |\
+          tr '[:upper:]' '[:lower:]')
+        # This code path only conditionally triggered for testing purposes
+        if [ "${{ github.ref_type }}" = 'tag' ]; then
+          PUSHED_TAG="${{ github.ref_name }}"
+        else
+          PUSHED_TAG="${{ inputs.test_tag }}"
+        fi
+
+        # Validate outputs from previous action
+        PROJECT_VERSION="${{ steps.fetch.outputs.python_project_version }}"
+        if [ -z "$PROJECT_VERSION" ]; then
+          echo "The python project version string was empty ❌"
+          echo "Check action/workflow inputs/output/variables"
           exit 1
         fi
 
-        echo "output=$INPUT" >> "$GITHUB_ENV"
-        echo "output=$INPUT" >> "$GITHUB_OUTPUT"
-        echo "Action received a valid input: $INPUT ✅"
-        echo "Action received a valid input: $INPUT ✅" >> "$GITHUB_STEP_SUMMARY"
+        compareTag() {
+          if [ "$1" = "$2" ]; then
+            echo "true"
+          else
+            echo "false"
+          fi
+        }
+
+        # Get version from pushed tag
+        echo "Project version: $PROJECT_VERSION"
+        echo "Pushed tag:      $PUSHED_TAG"
+
+        # Perform comparison check
+        RESULT=$(compareTag "$PUSHED_TAG" "$PROJECT_VERSION")
+        if [ "$RESULT" != "MATCH" ]; then
+          # If present, strip the leading "v" character and retry
+          if [[ "$PUSHED_TAG" == v* ]]; then
+            PUSHED_TAG="${PUSHED_TAG:1}"
+          fi
+          RESULT=$(compareTag "$PUSHED_TAG" "$PROJECT_VERSION")
+        fi
+
+        # Set output values
+        echo "match=$RESULT" >> "$GITHUB_ENV"
+        echo "match=$RESULT" >> "$GITHUB_OUTPUT"
+        if [ "$RESULT" = "true" ]; then
+          echo "Pushed tag matches version in Python project ✅"
+        else
+          echo "Error: pushed tag does NOT match version in Python project ❌"
+          echo "Error: pushed tag does NOT match version in Python project ❌" \
+            >> "$GITHUB_STEP_SUMMARY"
+          if [ "f$EXIT_ON_FAIL" = "ftrue" ]; then
+            exit 1
+          fi
+        fi

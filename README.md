@@ -3,11 +3,11 @@
 # SPDX-FileCopyrightText: 2025 The Linux Foundation
 -->
 
-# 🛠️ Template Action
+# 🐍 Check Pushed Tag Matches Project Version
 
-This is a template for the other actions in this Github organisation.
+Checks a pushed tag matches the declared Python project version
 
-## actions-template
+## python-project-tag-push-verify-action
 
 ## Usage Example
 
@@ -15,11 +15,9 @@ This is a template for the other actions in this Github organisation.
 
 ```yaml
 steps:
-  - name: "Action template"
-    id: action-template
-    uses: lfreleng-actions/actions-template@main
-    with:
-      input: "placeholder"
+  - name: "Check pushed tags matches project version"
+    if: startsWith(github.ref, 'refs/tags/')
+    uses: lfreleng-actions/python-project-tag-push-verify-action@main
 ```
 
 <!-- markdownlint-enable MD046 -->
@@ -28,9 +26,10 @@ steps:
 
 <!-- markdownlint-disable MD013 -->
 
-| Variable Name | Required | Description  |
-| ------------- | -------- | ------------ |
-| INPUT         | False    | Action input |
+| Variable Name | Required | Default | Description                                    |
+| ------------- | -------- | ------- | ---------------------------------------------- |
+| EXIT_ON_FAIL  | False    | True    | Action will exit with an error on mismatch     |
+| PATH_PREFIX   | False    | None    | Directory path to the repository/project files |
 
 <!-- markdownlint-enable MD013 -->
 
@@ -38,12 +37,13 @@ steps:
 
 <!-- markdownlint-disable MD013 -->
 
-| Variable Name | Description   |
-| ------------- | ------------- |
-| OUTPUT        | Action output |
+| Variable Name | Description                                                      |
+| ------------- | ---------------------------------------------------------------- |
+| MATCH         | Set true when pushed tag matches declared Python project version |
 
 <!-- markdownlint-enable MD013 -->
 
 ## Implementation Details
 
-## Notes
+Git tags often contain a leading "v" character/prefix. If an initial comparison
+check fails, this action will strip it and perform a second comparison.
