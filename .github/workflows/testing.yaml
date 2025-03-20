@@ -27,15 +27,36 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       # Perform setup prior to running test(s)
-      - name: "Testing setup step"
-        shell: bash
-        run: |
-          # Testing setup step
-          echo "Testing setup step"
-          echo "Testing setup step/summary output" >> "$GITHUB_STEP_SUMMARY"
+      - name: "Checkout sample project repository"
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: "lfreleng-actions/test-python-project"
+          path: "test-python-project"
 
-      - name: "Running local action: ${{ github.repository }}"
+      # Test valid tag comparison
+      - name: "Run Action: ${{ github.repository }}"
         uses: ./
+        with:
+          path_prefix: "test-python-project/"
+          exit_on_fail: "false"
+          test_tag: "0.0.1"
+
+      # Test valid tag comparison (variation)
+      - name: "Run Action: ${{ github.repository }}"
+        uses: ./
+        with:
+          path_prefix: "test-python-project/"
+          exit_on_fail: "false"
+          test_tag: "v0.0.1"
+
+      # Test invalid tag comparison
+      - name: "Run Action: ${{ github.repository }}"
+        uses: ./
+        continue-on-error: true
+        with:
+          path_prefix: "test-python-project/"
+          exit_on_fail: "false"
+          test_tag: "0.1.0"
 
       - name: "Validating local action: ${{ github.repository }}"
         shell: bash
