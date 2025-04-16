@@ -47,7 +47,7 @@ runs:
     - name: "Retrieve Python project version"
       id: fetch
       # yamllint disable-line rule:line-length
-      uses: lfreleng-actions/python-project-version-action@d613a3a9b982eb87ce8f408963a1e75938485a52 # v0.1.2
+      uses: lfreleng-actions/python-project-version-action@704bc148b3b7739452843a1dcb2ed57c804d58f7 # v0.1.3
       with:
         path_prefix: "${{ inputs.PATH_PREFIX }}"
 
