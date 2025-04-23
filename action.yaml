@@ -9,13 +9,13 @@ description: "Checks a pushed tag matches the declared Python project version"
 inputs:
   EXIT_ON_FAIL:
     description: "When set true will exit with error on version mismatch"
+    type: 'boolean'
     required: false
     default: "true"
   PATH_PREFIX:
     description: "Directory location containing project code"
     type: string
     required: false
-    default: ""
   # For testing purposes ONLY, do not use
   TEST_TAG:
     description: "Undocumented test input/value"
@@ -30,20 +30,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: "Error: workflow/action trigger NOT tag event"
-      if: startsWith(github.ref, 'refs/tags/') != 'true'
-      shell: bash
-      run: |
-        # Error when workflow/action trigger not tag event
-        EXIT_ON_FAIL=$(echo "${{ inputs.exit_on_fail }}" |\
-          tr '[:upper:]' '[:lower:]')
-        if [ "f$EXIT_ON_FAIL" = "ftrue" ]; then
-          echo "Workflow/action trigger was NOT tag push event ❌"
-          exit 1
-        else
-          echo "Workflow/action was NOT triggered by tag push event ⚠️"
-        fi
-
     - name: "Retrieve Python project version"
       id: fetch
       # yamllint disable-line rule:line-length
@@ -56,8 +42,7 @@ runs:
       shell: bash
       run: |
         # Check tag/versions for consistency
-        EXIT_ON_FAIL=$(echo "${{ inputs.exit_on_fail }}" |\
-          tr '[:upper:]' '[:lower:]')
+        EXIT_ON_FAIL="${{ inputs.exit_on_fail }}"
         # This code path only conditionally triggered for testing purposes
         if [ "${{ github.ref_type }}" = 'tag' ]; then
           PUSHED_TAG="${{ github.ref_name }}"
