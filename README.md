@@ -28,8 +28,8 @@ steps:
 
 | Variable Name | Required | Default | Description                                    |
 | ------------- | -------- | ------- | ---------------------------------------------- |
-| EXIT_ON_FAIL  | False    | True    | Action will exit with an error on mismatch     |
-| PATH_PREFIX   | False    | None    | Directory path to the repository/project files |
+| exit_on_fail  | False    | True    | Action will exit with an error on mismatch     |
+| path_prefix   | False    | None    | Directory path to the repository/project files |
 
 <!-- markdownlint-enable MD013 -->
 
@@ -39,7 +39,8 @@ steps:
 
 | Variable Name | Description                                                      |
 | ------------- | ---------------------------------------------------------------- |
-| MATCH         | Set true when pushed tag matches declared Python project version |
+| match         | Set true when pushed tag matches declared Python project version |
+| matched_tag   | Matched tag/version value                                        |
 
 <!-- markdownlint-enable MD013 -->
 

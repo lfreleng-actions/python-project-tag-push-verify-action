@@ -3,56 +3,59 @@
 # SPDX-FileCopyrightText: 2025 The Linux Foundation
 
 # python-project-tag-push-verify-action
-name: "🐍 Check Pushed Tag Matches Project Version"
-description: "Checks a pushed tag matches the declared Python project version"
+name: '🐍 Check Pushed Tag Matches Project Version'
+description: 'Checks a pushed tag matches the declared Python project version'
 
 inputs:
-  EXIT_ON_FAIL:
-    description: "When set true will exit with error on version mismatch"
+  exit_on_fail:
+    description: 'When set true will exit with error on version mismatch'
     type: 'boolean'
     required: false
     default: "true"
-  PATH_PREFIX:
-    description: "Directory location containing project code"
-    type: string
+  path_prefix:
+    description: 'Directory location containing project code'
+    type: 'string'
     required: false
   # For testing purposes ONLY, do not use
-  TEST_TAG:
-    description: "Undocumented test input/value"
-    type: string
+  test_tag:
+    description: 'Undocumented test input/value'
+    type: 'string'
     required: false
 
 outputs:
-  MATCH:
-    description: "Set true when pushed tags match Python project metadata"
-    value: ${{ steps.verify.outputs.match }}
+  match:
+    description: 'Set true when pushed tags match Python project metadata'
+    value: "${{ steps.verify.outputs.match }}"
+  matched_tag:
+    description: 'Matched tag/version value'
+    value: "${{ steps.verify.outputs.matched_tag }}"
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
-    - name: "Retrieve Python project version"
+    - name: 'Retrieve Python project version'
       id: fetch
       # yamllint disable-line rule:line-length
       uses: lfreleng-actions/python-project-version-action@704bc148b3b7739452843a1dcb2ed57c804d58f7 # v0.1.3
       with:
-        path_prefix: "${{ inputs.PATH_PREFIX }}"
+        path_prefix: "${{ inputs.path_prefix }}"
 
-    - name: "Check tag/version for match"
+    - name: 'Check tag/version for match'
       id: verify
       shell: bash
       run: |
         # Check tag/versions for consistency
-        EXIT_ON_FAIL="${{ inputs.exit_on_fail }}"
+        exit_on_fail="${{ inputs.exit_on_fail }}"
         # This code path only conditionally triggered for testing purposes
         if [ "${{ github.ref_type }}" = 'tag' ]; then
-          PUSHED_TAG="${{ github.ref_name }}"
+          pushed_tag="${{ github.ref_name }}"
         else
-          PUSHED_TAG="${{ inputs.test_tag }}"
+          pushed_tag="${{ inputs.test_tag }}"
         fi
 
         # Validate outputs from previous action
-        PROJECT_VERSION="${{ steps.fetch.outputs.python_project_version }}"
-        if [ -z "$PROJECT_VERSION" ]; then
+        project_version="${{ steps.fetch.outputs.python_project_version }}"
+        if [ -z "$project_version" ]; then
           echo "The python project version string was empty ❌"
           echo "Check action/workflow inputs/output/variables"
           exit 1
@@ -66,30 +69,33 @@ runs:
           fi
         }
 
-        # Get version from pushed tag
-        echo "Project version: $PROJECT_VERSION"
-        echo "Pushed tag:      $PUSHED_TAG"
+        # Display the compared versions
+        echo "Project version: $project_version"
+        echo "Pushed tag:      $pushed_tag"
 
         # Perform comparison check
-        RESULT=$(compareTag "$PUSHED_TAG" "$PROJECT_VERSION")
-        if [ "$RESULT" != "MATCH" ]; then
+        result=$(compareTag "$pushed_tag" "$project_version")
+        if [ "$result" != "MATCH" ]; then
           # If present, strip the leading "v" character and retry
-          if [[ "$PUSHED_TAG" == v* ]]; then
-            PUSHED_TAG="${PUSHED_TAG:1}"
+          if [[ "$pushed_tag" == v* ]]; then
+            pushed_tag="${pushed_tag:1}"
           fi
-          RESULT=$(compareTag "$PUSHED_TAG" "$PROJECT_VERSION")
+          result=$(compareTag "$pushed_tag" "$project_version")
         fi
 
         # Set output values
-        echo "match=$RESULT" >> "$GITHUB_ENV"
-        echo "match=$RESULT" >> "$GITHUB_OUTPUT"
-        if [ "$RESULT" = "true" ]; then
-          echo "Pushed tag matches version in Python project ✅"
+        echo "match=$result" >> "$GITHUB_ENV"
+        echo "match=$result" >> "$GITHUB_OUTPUT"
+        echo "matched_tag=$pushed_tag" >> "$GITHUB_ENV"
+        echo "matched_tag=$pushed_tag" >> "$GITHUB_OUTPUT"
+
+        if [ "$result" = "true" ]; then
+          echo 'Pushed tag matches version in Python project ✅'
         else
-          echo "Error: pushed tag does NOT match version in Python project ❌"
-          echo "Error: pushed tag does NOT match version in Python project ❌" \
+          echo 'Error: pushed tag does NOT match Python project version ❌'
+          echo 'Error: pushed tag does NOT match Python project version ❌' \
             >> "$GITHUB_STEP_SUMMARY"
-          if [ "f$EXIT_ON_FAIL" = "ftrue" ]; then
+          if [ "f$exit_on_fail" = "ftrue" ]; then
             exit 1
           fi
         fi
