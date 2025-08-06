@@ -9,17 +9,14 @@ description: 'Checks a pushed tag matches the declared Python project version'
 inputs:
   exit_on_fail:
     description: 'When set true will exit with error on version mismatch'
-    type: 'boolean'
     required: false
-    default: "true"
+    default: 'true'
   path_prefix:
     description: 'Directory location containing project code'
-    type: 'string'
     required: false
   # For testing purposes ONLY, do not use
   test_tag:
     description: 'Undocumented test input/value'
-    type: 'string'
     required: false
 
 outputs:
