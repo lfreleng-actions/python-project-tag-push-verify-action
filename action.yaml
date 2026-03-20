@@ -72,7 +72,7 @@ runs:
 
         # Perform comparison check
         result=$(compareTag "$pushed_tag" "$project_version")
-        if [ "$result" != "MATCH" ]; then
+        if [ "$result" != "true" ]; then
           # If present, strip the leading "v" character and retry
           if [[ "$pushed_tag" == v* ]]; then
             pushed_tag="${pushed_tag:1}"
