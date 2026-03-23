@@ -38,6 +38,15 @@ jobs:
           repository: 'lfreleng-actions/test-python-project'
           path: 'test-python-project'
 
+      - name: 'Setup static version fixture for testing'
+        shell: bash
+        run: |
+          # Setup static version fixture for testing
+          # test-python-project now uses dynamic versioning;
+          # copy static variation for tag verification tests
+          cp test-python-project/variations/static-eol.toml \
+            test-python-project/pyproject.toml
+
       # Test valid tag comparison
       - name: "Run Action: ${{ github.repository }} [Exact match]"
         uses: ./
