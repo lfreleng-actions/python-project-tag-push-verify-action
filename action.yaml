@@ -40,18 +40,24 @@ runs:
     - name: 'Check tag/version for match'
       id: verify
       shell: bash
+      env:
+        EXIT_ON_FAIL: "${{ inputs.exit_on_fail }}"
+        REF_TYPE: "${{ github.ref_type }}"
+        REF_NAME: "${{ github.ref_name }}"
+        TEST_TAG: "${{ inputs.test_tag }}"
+        PROJECT_VERSION: "${{ steps.fetch.outputs.python_project_version }}"
       run: |
         # Check tag/versions for consistency
-        exit_on_fail="${{ inputs.exit_on_fail }}"
-        # This code path only conditionally triggered for testing purposes
-        if [ "${{ github.ref_type }}" = 'tag' ]; then
-          pushed_tag="${{ github.ref_name }}"
+        exit_on_fail="$EXIT_ON_FAIL"
+        # This code path is only conditionally triggered for testing purposes
+        if [ "$REF_TYPE" = 'tag' ]; then
+          pushed_tag="$REF_NAME"
         else
-          pushed_tag="${{ inputs.test_tag }}"
+          pushed_tag="$TEST_TAG"
         fi
 
-        # Validate outputs from previous action
-        project_version="${{ steps.fetch.outputs.python_project_version }}"
+        # Validate outputs from previous action
+        project_version="$PROJECT_VERSION"
         if [ -z "$project_version" ]; then
           echo "The python project version string was empty ❌"
           echo "Check action/workflow inputs/output/variables"
@@ -80,10 +86,8 @@ runs:
           result=$(compareTag "$pushed_tag" "$project_version")
         fi
 
-        # Set output values
-        echo "match=$result" >> "$GITHUB_ENV"
+        # Set output values
         echo "match=$result" >> "$GITHUB_OUTPUT"
-        echo "matched_tag=$pushed_tag" >> "$GITHUB_ENV"
         echo "matched_tag=$pushed_tag" >> "$GITHUB_OUTPUT"
 
         if [ "$result" = "true" ]; then
