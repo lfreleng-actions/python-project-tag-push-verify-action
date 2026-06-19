@@ -49,7 +49,7 @@ runs:
       run: |
         # Check tag/versions for consistency
         exit_on_fail="$EXIT_ON_FAIL"
-        # This code path only conditionally triggered for testing purposes
+        # This code path is only conditionally triggered for testing purposes
         if [ "$REF_TYPE" = 'tag' ]; then
           pushed_tag="$REF_NAME"
         else
