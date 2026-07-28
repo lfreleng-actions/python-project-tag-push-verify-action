@@ -29,7 +29,7 @@ steps:
 | Variable Name | Required | Default | Description                                    |
 | ------------- | -------- | ------- | ---------------------------------------------- |
 | exit_on_fail  | False    | True    | Action will exit with an error on mismatch     |
-| path_prefix   | False    | None    | Directory path to the repository/project files |
+| path_prefix   | False    | .       | Directory path to the repository/project files |
 
 <!-- markdownlint-enable MD013 -->
 
